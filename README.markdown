@@ -1,5 +1,6 @@
 # liquid-lua
 A lua implementation of [liquid](https://shopify.github.io/liquid/) for [OpenResty](http://openresty.org/en/) platform.
+[![Build Status](https://travis-ci.org/chenxianyu2015/liquid-lua.svg?branch=master)](https://travis-ci.org/chenxianyu2015/liquid-lua)
 
 ## Introduction
 Since liquid markup language has no its official language specification document , liquid-lua adopts a classic lexer/parser/interpreter implementation approch and comes up with a strict error mode, which is different from the [liquid-ruby](https://github.com/Shopify/liquid) approach(regexp tokenizer/tag parser/tag interpreter) with three error modes(lax/warning/strict mode). Due to different implementation approch, liquid-lua will behave differently from liquid-ruby in some cases.**i.e., liquid-lua is NOT 100% compatible with liquid-ruby.** More detail info about incompatibility between liquid-lua and liquid-ruby will be collected and listed in DIFFERENCE.md .
