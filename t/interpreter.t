@@ -490,3 +490,22 @@ one
 
 --- no_error_log
 [error]
+
+=== TEST 19: template (friendly interface) test
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local document = "{% if true %}  abc  {% endif %}{% if true -%}  abc  {%- endif %}"
+            local template = Liquid.Template:parse(document)
+            ngx.say( template:render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+  abc  abc
+
+--- no_error_log
+[error]

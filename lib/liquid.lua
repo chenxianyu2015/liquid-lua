@@ -1869,6 +1869,7 @@ function Interpreter:new( parser )
     instance.parser = parser
     instance.interrupt_flag = false -- mark unhandled 'break/continue'
     instance.interrupt_type = nil   -- mark unhandled 'break/continue' type(nil/break/conntinue)
+    instance.tree = parser:document()
     return instance
 end
 --
@@ -1921,8 +1922,7 @@ function Interpreter:interpret( context, filterset, resourcelimit )
     self.interpretercontext = context or InterpreterContext:new({})
     self.filterset = filterset or FilterSet:new()
     self.resourcelimit = resourcelimit or ResourceLimit:new()
-    local tree = self.parser:document()
-    return self:visit(tree)
+    return self:visit(self.tree)
 end
 function Interpreter:visit_Num( node )
     return node.value
@@ -2662,6 +2662,25 @@ function Nodetab:get_pos( k )
     return self.locations[k]
 end
 -------------------------------------------------------------Nodetab end ---------------------------------------------------------
+------------------------------------------------------------- friendly interface begin ---------------------------------------------------------
+local Template = {}
+function Template:parse( text , parser_context)
+    -- body
+    local instance = {}
+    setmetatable(instance, {__index = Template})
+    instance.lexer = Lexer:new(text)
+    instance.parser = Parser:new(instance.lexer, parser_context)
+    instance.interpreter = Interpreter:new(instance.parser)
+    return instance
+end
+function Template:render( context, filterset, resourcelimit )
+    -- body
+    local t_interpretercontext = context or InterpreterContext:new({})
+    local t_filterset = filterset or FilterSet:new()
+    local t_resourcelimit = resourcelimit or ResourceLimit:new()
+    return self.interpreter:interpret( t_interpretercontext, t_filterset, t_resourcelimit )
+end
+------------------------------------------------------------- friendly interface end ---------------------------------------------------------
 ------------------------------------------------------------- helper methods begin ---------------------------------------------------------
 function string:lstrip( ... )
     local ws = [[(\A\s*)]]
@@ -3023,4 +3042,5 @@ Liquid.FilterSet = FilterSet
 Liquid.FileSystem = FileSystem
 Liquid.ParserContext = ParserContext
 Liquid.Lazy = Lazy
+Liquid.Template = Template
 return Liquid
