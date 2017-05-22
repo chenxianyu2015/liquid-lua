@@ -2198,7 +2198,7 @@ function Interpreter:visit_ForLoop( node )
     end
 
     local output = {}
-    if (to - from) >= 1 then
+    if (to - from) >= 0 then
         self.interpretercontext:newframe()
         local step = 1
         if reversed then

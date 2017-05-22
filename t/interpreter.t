@@ -465,3 +465,28 @@ GET /t
 --- no_error_log
 [error]
 
+
+=== TEST 18: 'for endfor' tag.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local InterpreterContext = Liquid.InterpreterContext
+            local document = "{% for v in values %}{{ v }}{% endfor %}"
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret(InterpreterContext:new({ values = { 'one' } })))
+        }
+    }
+--- request
+GET /t
+--- response_body
+one
+
+--- no_error_log
+[error]
