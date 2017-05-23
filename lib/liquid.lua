@@ -2576,7 +2576,7 @@ function Lazy:new( obj, fields )
     -- body
     local instance = {}
     instance.obj = obj
-    instance.fields = fields
+    instance.fields = fields or {}
     instance.flags = {}
     setmetatable(instance, {
         __index = function ( t, k )
