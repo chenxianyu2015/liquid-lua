@@ -531,6 +531,8 @@ GET /t
     }
 --- request
 GET /t
-
 --- response_body
  one = one two = two
+
+--- no_error_log
+[error]
