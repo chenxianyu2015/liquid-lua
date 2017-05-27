@@ -72,3 +72,29 @@ hi
 pong
 --- no_error_log
 [error]
+
+
+=== TEST 3: lazy method initialized without cache
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+		 local Liquid = require 'liquid'
+		 local Lazy = Liquid.Lazy
+		 local function ping(...)
+			ngx.say("hi")
+			return "pong"
+		 end
+		 local obj = { ["test"] = ping}
+		 local lazy_oj = Lazy:new(obj)
+		 ngx.say(lazy_oj.test)
+		 ngx.say(lazy_oj.test)
+		}
+	}
+--- request
+GET /t
+--- response_body
+nil
+nil
+--- no_error_log
+[error]

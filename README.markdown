@@ -11,19 +11,19 @@ The following components of liquid-lua have been implemented:
 * Parser
 * Interpreter
 * Parser context
- A component for whitespace control feature.
+    - A component for whitespace control feature.
 * Interprerter context
- A Component exposing lua variable to liquid engine.
+    - A Component exposing lua variable to liquid engine.
 * FilterSet
- A Component exposing lua function to liquid engine. In liquid-ruby it's called `Strainer`.
+    - A Component exposing lua function to liquid engine. In liquid-ruby it's called `Strainer`.
 * Resourcelimit
- A simple system resource limit component for liquid engine.
+    - A simple system resource limit component for liquid engine.
 * File system
- A simple wraper of template source backend (redis/mongo/local file system).
+    - A simple wraper of template source backend (redis/mongo/local file system).
 * Lazy
- A wraper makes a normal lua table behave like lazy hash. In liquid-ruby it's called `Drop`.
+    - A wraper makes a normal lua table behave like lazy hash. In liquid-ruby it's called `Drop`.
 * Nodetab
- Runtime errors can get the corresponding source text position info from Nodetab. (Linux ELF has a Systab, liquid-lua has a Nodetab.)
+    - Runtime errors can get the corresponding source text position info from Nodetab. (Linux ELF has a Systab, liquid-lua has a Nodetab.)
 
 
 ## Installation
@@ -43,8 +43,41 @@ opm get chenxianyu2015/liquid-lua
 3. Copy it to your openresty lua lib path.
 
 ### Usage:
+Liquid-lua provides a frendly template interface to use which is much like liquid-ruby.
+1. a 'hi tobi' example 
+```lua
+-- require these components
+local Liquid = require 'liquid'
 
-Currently liquid-lua only has a lot of basic and low level components, which are not frendly or easy to use. But it is easy to build frendly interfaces with these components.
+-- template to render
+local document = 'hi {{name}}'
+-- variable to render
+local var = {["name"] = "tobi" }
+
+local template = Liquid.Template:parse(document)
+
+-- the content of result is  'hi tobi'
+local result = template:render( Liquid.InterpreterContext:new(var) )
+```
+
+2. a for-loop example
+```lua
+-- require these components
+local Liquid = require 'liquid'
+
+-- template to render
+local document = '{%for k in num%} {{k}} {% endfor%}'
+-- variable to render
+local var = {["num"] = {5,4,3,2,1} }
+
+local template = Liquid.Template:parse(document)
+
+-- the content of result is:  5  4  3  2  1
+local result = template:render( Liquid.InterpreterContext:new(var) )
+```
+
+
+Meanwhile liquid-lua has a lot of basic and low level components, which are not frendly or easy to use. But it is easy to build your interfaces with these components.
 Here are some examples to show how to use these components.
 
 

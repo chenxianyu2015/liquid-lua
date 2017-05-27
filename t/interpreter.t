@@ -490,3 +490,49 @@ one
 
 --- no_error_log
 [error]
+
+=== TEST 19: template (friendly interface) test
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local document = "{% if true %}  abc  {% endif %}{% if true -%}  abc  {%- endif %}"
+            local template = Liquid.Template:parse(document)
+            ngx.say( template:render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+  abc  abc
+
+--- no_error_log
+[error]
+
+=== TEST 20: 'for include print variable endfor' tag.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local InterpreterContext = Liquid.InterpreterContext
+            local FileSystem = Liquid.FileSystem
+            function FileSystem.get(location) return location end
+            local document = "{% for v in values %} {% include v %} = {{ v }}{% endfor %}"
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret(InterpreterContext:new({ values = { 'one', 'two' } })))
+        }
+    }
+--- request
+GET /t
+--- response_body
+ one = one two = two
+
+--- no_error_log
+[error]
