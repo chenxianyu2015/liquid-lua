@@ -2388,10 +2388,10 @@ function Interpreter:visit_Partial( node )
     local lexer = Lexer:new(file)
     local parser = Parser:new(lexer, node.parser_context)
     local context = self.interpretercontext
+    context:newframe()
     if node.interpretercontext then
         local temp = self:visit(node.interpretercontext)
         if type(temp) == "table" then
-            context:newframe()
             for k,v in pairs(temp) do
                 context:define_var(k, v)
             end
