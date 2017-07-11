@@ -536,3 +536,71 @@ GET /t
 
 --- no_error_log
 [error]
+
+
+
+=== TEST 21: 'include' tag with custom filesystem
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local var = {["aa"] =  "-----",  ["bb"] = { ["cc"] = "======" } }
+            local document = "{% if true  %} abc{{ aa }}defg {% endif %} {% include 'foo' for bb  %} {% include 'foo' %}"
+            local fs = { foo = [[{% if true  %} 12345{{ cc }}6789{% endif %}]] }
+            local function mock_template(location)
+                return fs[location]
+            end
+            local filesystem = FileSystem:new(mock_template)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say( interpreter:interpret( InterpreterContext:new(var), nil, nil, filesystem ) )
+        }
+    }
+--- request
+GET /t
+--- response_body
+ abc-----defg   12345======6789  123456789
+--- no_error_log
+[error]
+
+
+
+=== TEST 18: 'include' tag error handling
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local var = {["aa"] =  "-----",  ["bb"] = { ["cc"] = "======" } }
+            local document = "{% include 'nil' %}{% include 'error' %}"
+            local function mock_template(location)
+                if location == 'error' then
+                    error('failed to load location error')
+                end
+            end
+            local filesystem = FileSystem:new(mock_template)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            local ok, err = pcall(function() interpreter:interpret(InterpreterContext:new(var), nil, nil, filesystem) end)
+            ngx.say(err)
+        }
+    }
+--- request
+GET /t
+--- response_body_like chomp
+error fail by user self defined get method
+--- no_error_log
+[error]
