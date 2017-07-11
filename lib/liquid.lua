@@ -2549,27 +2549,38 @@ end
 -------------------------------------------------------------ParserContext end ---------------------------------------------------------
 -------------------------------------------------------------FileSystem begin ---------------------------------------------------------
 -- local FileSystem = {}
-function FileSystem:new( get )
+function FileSystem:new( get, error_handler )
     -- body
     local instance = {}
     setmetatable(instance, {__index = FileSystem})
     instance.get = get
     instance.text = nil
+    instance.error_handler = error_handler
     return instance
 end
 --
 function FileSystem:genertic_get( location )
+    local error_handler = self.error_handler
     -- body
     if self.get and type(self.get) == "function" then
-        local status, err = pcall(self.get, location)
-        if status then
-            return err
+        local ok, ret = pcall(self.get, location)
+
+        if not ret then
+            return error_handler(location, "cannot render empty template" )
+	      end
+
+        if ok then
+            return ret
         else
-            error("get template: " .. location .. " fail by user self defined get method " .. tostring(err))
+            return error_handler(location, "fail by user self defined get method: " .. tostring(ret))
         end
     else
-         error("method to get template file is not defined !!")
+        return error_handler(location, "method to get template file is not defined !!")
     end
+end
+--
+function FileSystem.error_handler(location, err)
+    return error(string.format("error when getting template %q: %s", location, err))
 end
 -------------------------------------------------------------FileSystem end ---------------------------------------------------------
 -------------------------------------------------------------Lazy begin ---------------------------------------------------------

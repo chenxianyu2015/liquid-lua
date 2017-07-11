@@ -572,7 +572,7 @@ GET /t
 
 
 
-=== TEST 18: 'include' tag error handling
+=== TEST 22 'include' tag missing template
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -583,24 +583,82 @@ GET /t
             local Interpreter = Liquid.Interpreter
             local FileSystem = Liquid.FileSystem
             local InterpreterContext = Liquid.InterpreterContext
-            local var = {["aa"] =  "-----",  ["bb"] = { ["cc"] = "======" } }
-            local document = "{% include 'nil' %}{% include 'error' %}"
-            local function mock_template(location)
-                if location == 'error' then
-                    error('failed to load location error')
-                end
-            end
-            local filesystem = FileSystem:new(mock_template)
+            local document = "{% include 'missing_template' %}"
+            local filesystem = FileSystem:new(function() end)
             local lexer = Lexer:new(document)
             local parser = Parser:new(lexer)
             local interpreter = Interpreter:new(parser)
-            local ok, err = pcall(function() interpreter:interpret(InterpreterContext:new(var), nil, nil, filesystem) end)
-            ngx.say(err)
+            xpcall(function() interpreter:interpret(InterpreterContext:new({}), nil, nil, filesystem) end, ngx.say)
         }
     }
 --- request
 GET /t
 --- response_body_like chomp
-error fail by user self defined get method
+error when getting template "missing_template": cannot render empty template
+--- no_error_log
+[error]
+
+
+
+=== TEST 23 'include' tag error handling
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local document = "{% include 'error' %}"
+            local function mock_template(location)
+                error('failed to load location error')
+            end
+            local filesystem = FileSystem:new(mock_template)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            xpcall(function() interpreter:interpret(InterpreterContext:new({}), nil, nil, filesystem) end, ngx.say)
+        }
+    }
+--- request
+GET /t
+--- response_body_like chomp
+error when getting template "error": fail by user self defined get method:
+--- no_error_log
+[error]
+
+
+
+=== TEST 24 'include' tag custom error handling
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local document = "{% include 'error' %}"
+            local function mock_template(location)
+                error('failed to load location error')
+            end
+            local function error_handler(location, error)
+                return string.format("location: %q, error: %s", location, error)
+            end
+            local filesystem = FileSystem:new(mock_template, error_handler)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret(InterpreterContext:new({}), nil, nil, filesystem))
+        }
+    }
+--- request
+GET /t
+--- response_body_like chomp
+location: "error", error: fail by user self defined get method:
 --- no_error_log
 [error]
