@@ -1,0 +1,12 @@
+---
+engines:
+  luacheck:
+    enabled: true
+    channel: beta
+    checks:
+      LC631: # line length
+        enabled: false
+ratings:
+  paths:
+    - '**/*.lua'
+exclude_paths: []
