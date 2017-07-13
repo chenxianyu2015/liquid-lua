@@ -625,7 +625,7 @@ error when getting template "missing_template": cannot render empty template
 --- request
 GET /t
 --- response_body_like chomp
-error when getting template "error": fail by user self defined get method:
+failed to load location error
 --- no_error_log
 [error]
 
@@ -659,6 +659,6 @@ error when getting template "error": fail by user self defined get method:
 --- request
 GET /t
 --- response_body_like chomp
-location: "error", error: fail by user self defined get method:
+failed to load location error
 --- no_error_log
 [error]

@@ -2565,14 +2565,12 @@ function FileSystem:generic_get( location )
     if self.get and type(self.get) == "function" then
         local ok, ret = pcall(self.get, location)
 
-        if not ret then
+        if ok and ret then
+            return tostring(ret)
+        elseif ok then
             return error_handler(location, "cannot render empty template" )
-	      end
-
-        if ok then
-            return ret
         else
-            return error_handler(location, "fail by user self defined get method: " .. tostring(ret))
+            return error_handler(location, ret)
         end
     else
         return error_handler(location, "method to get template file is not defined !!")
