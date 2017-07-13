@@ -171,8 +171,8 @@ local KEYWORDS = {
 }
 
 --Raw string mode 0;  liquid code mode 1
-RMODE = 0
-CMODE = 1
+local RMODE = 0
+local CMODE = 1
 -- Lexer
 -- local Lexer = {}
 --
@@ -2686,12 +2686,14 @@ function Template:parse( text , parser_context)
     instance.interpreter = Interpreter:new(instance.parser)
     return instance
 end
-function Template:render( context, filterset, resourcelimit )
+function Template:render( context, filterset, resourcelimit, filesystem )
     -- body
     local t_interpretercontext = context or InterpreterContext:new({})
     local t_filterset = filterset or FilterSet:new()
     local t_resourcelimit = resourcelimit or ResourceLimit:new()
-    return self.interpreter:interpret( t_interpretercontext, t_filterset, t_resourcelimit )
+    local t_filesystem = filesystem or FileSystem:new()
+
+    return self.interpreter:interpret( t_interpretercontext, t_filterset, t_resourcelimit, t_filesystem )
 end
 ------------------------------------------------------------- friendly interface end ---------------------------------------------------------
 ------------------------------------------------------------- helper methods begin ---------------------------------------------------------
