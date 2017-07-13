@@ -81,7 +81,7 @@ local CAPTURE = "CAPTURE"       --"capture"
 local ENDCAPTURE = "ENDCAPTURE" --"endcapture"
 local INCREMENT = "INCREMENT"   --"increment"
 local DECREMENT = "DECREMENT"   --"decrement"
--- Genertic token
+-- Generic token
 local NUM = "NUM"
 local STRING = "STRING"
 local ID = "ID"
@@ -1908,11 +1908,11 @@ function Interpreter:visit( node )
     elseif self[method] and type(self[method]) == 'function' then
         return self[method](self, node)
     else
-        return self:genertic_visit(node)
+        return self:generic_visit(node)
     end
 end
 --
-function Interpreter:genertic_visit( node )
+function Interpreter:generic_visit( node )
     -- body
     error('visit_' .. node:_name_() .. ' method not found')
 end
@@ -2386,7 +2386,7 @@ function Interpreter:visit_Partial( node )
     local filesystem = self.filesystem
     local t = node.parser_context
     local location = self:visit(node.location)
-    local file = filesystem:genertic_get(location)
+    local file = filesystem:generic_get(location)
     local lexer = Lexer:new(file)
     local parser = Parser:new(lexer, node.parser_context)
     local context = self.interpretercontext
@@ -2559,7 +2559,7 @@ function FileSystem:new( get, error_handler )
     return instance
 end
 --
-function FileSystem:genertic_get( location )
+function FileSystem:generic_get( location )
     local error_handler = self.error_handler
     -- body
     if self.get and type(self.get) == "function" then
