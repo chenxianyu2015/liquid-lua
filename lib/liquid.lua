@@ -171,8 +171,8 @@ local KEYWORDS = {
 }
 
 --Raw string mode 0;  liquid code mode 1
-RMODE = 0
-CMODE = 1
+local RMODE = 0
+local CMODE = 1
 -- Lexer
 -- local Lexer = {}
 --
@@ -432,7 +432,7 @@ function Lexer:string( ... )
         self:advance()
         while self.current_char do
             if self.current_char:find('\\') then
-                t = self:peek(1)
+                local t = self:peek(1)
                 if t then
                     if t == 'a' then
                         self:advance()
@@ -496,7 +496,7 @@ function Lexer:string( ... )
         self:advance()
         while self.current_char do
             if self.current_char:find('\\') then
-                t = self:peek(1)
+                local t = self:peek(1)
                 if t then
                     if t == 'a' then
                         self:advance()
@@ -2468,7 +2468,7 @@ function Interpreter:visit_IncDec( node)
         inc_dec_context:define_var(node.id, result, 1)
         return result
     else
-        result = 0
+        local result = 0
         inc_dec_context = InterpreterContext:new({})
         inc_dec_context:define_var(node.id, result, 1)
         self.interpretercontext:define_var(IncDec, inc_dec_context, 1)
