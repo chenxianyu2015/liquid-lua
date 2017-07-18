@@ -81,7 +81,7 @@ local CAPTURE = "CAPTURE"       --"capture"
 local ENDCAPTURE = "ENDCAPTURE" --"endcapture"
 local INCREMENT = "INCREMENT"   --"increment"
 local DECREMENT = "DECREMENT"   --"decrement"
--- Genertic token
+-- Generic token
 local NUM = "NUM"
 local STRING = "STRING"
 local ID = "ID"
@@ -171,8 +171,8 @@ local KEYWORDS = {
 }
 
 --Raw string mode 0;  liquid code mode 1
-RMODE = 0
-CMODE = 1
+local RMODE = 0
+local CMODE = 1
 -- Lexer
 -- local Lexer = {}
 --
@@ -1908,20 +1908,21 @@ function Interpreter:visit( node )
     elseif self[method] and type(self[method]) == 'function' then
         return self[method](self, node)
     else
-        return self:genertic_visit(node)
+        return self:generic_visit(node)
     end
 end
 --
-function Interpreter:genertic_visit( node )
+function Interpreter:generic_visit( node )
     -- body
     error('visit_' .. node:_name_() .. ' method not found')
 end
 --
-function Interpreter:interpret( context, filterset, resourcelimit )
+function Interpreter:interpret( context, filterset, resourcelimit, filesystem )
     -- body
     self.interpretercontext = context or InterpreterContext:new({})
     self.filterset = filterset or FilterSet:new()
     self.resourcelimit = resourcelimit or ResourceLimit:new()
+    self.filesystem = filesystem or FileSystem:new()
     return self:visit(self.tree)
 end
 function Interpreter:visit_Num( node )
@@ -2382,9 +2383,10 @@ end
 function Interpreter:visit_Partial( node )
     -- body
     self.resourcelimit:check_subtemplate_num()
+    local filesystem = self.filesystem
     local t = node.parser_context
     local location = self:visit(node.location)
-    local file = FileSystem:new(location):genertic_get()
+    local file = filesystem:generic_get(location)
     local lexer = Lexer:new(file)
     local parser = Parser:new(lexer, node.parser_context)
     local context = self.interpretercontext
@@ -2547,27 +2549,36 @@ end
 -------------------------------------------------------------ParserContext end ---------------------------------------------------------
 -------------------------------------------------------------FileSystem begin ---------------------------------------------------------
 -- local FileSystem = {}
-function FileSystem:new( location )
+function FileSystem:new( get, error_handler )
     -- body
     local instance = {}
     setmetatable(instance, {__index = FileSystem})
-    instance.location = location
+    instance.get = get
     instance.text = nil
+    instance.error_handler = error_handler
     return instance
 end
 --
-function FileSystem:genertic_get( ... )
+function FileSystem:generic_get( location )
+    local error_handler = self.error_handler
     -- body
     if self.get and type(self.get) == "function" then
-        local status, err = pcall(self.get, self.location)
-        if status then
-            return err
+        local ok, ret = pcall(self.get, location)
+
+        if ok and ret then
+            return tostring(ret)
+        elseif ok then
+            return error_handler(location, "cannot render empty template" )
         else
-            error("get template: " .. location .. " fail by user self defined get method" .. tostring(err))
+            return error_handler(location, ret)
         end
     else
-         error("method to get template file is not defined !!")
+        return error_handler(location, "method to get template file is not defined !!")
     end
+end
+--
+function FileSystem.error_handler(location, err)
+    return error(string.format("error when getting template %q: %s", location, err))
 end
 -------------------------------------------------------------FileSystem end ---------------------------------------------------------
 -------------------------------------------------------------Lazy begin ---------------------------------------------------------
@@ -2673,12 +2684,14 @@ function Template:parse( text , parser_context)
     instance.interpreter = Interpreter:new(instance.parser)
     return instance
 end
-function Template:render( context, filterset, resourcelimit )
+function Template:render( context, filterset, resourcelimit, filesystem )
     -- body
     local t_interpretercontext = context or InterpreterContext:new({})
     local t_filterset = filterset or FilterSet:new()
     local t_resourcelimit = resourcelimit or ResourceLimit:new()
-    return self.interpreter:interpret( t_interpretercontext, t_filterset, t_resourcelimit )
+    local t_filesystem = filesystem or FileSystem:new()
+
+    return self.interpreter:interpret( t_interpretercontext, t_filterset, t_resourcelimit, t_filesystem )
 end
 ------------------------------------------------------------- friendly interface end ---------------------------------------------------------
 ------------------------------------------------------------- helper methods begin ---------------------------------------------------------
