@@ -536,3 +536,24 @@ GET /t
 
 --- no_error_log
 [error]
+
+
+=== TEST 21: setting custom resource limit.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local document = "{% for i in (1..5) %}{{ i }}{% endfor %}"
+            local template = Liquid.Template:parse(document)
+            local limit = Liquid.ResourceLimit:new(0, 0, 3)
+            local ok, err = pcall(template.render, template, nil, nil, limit)
+            if not ok then ngx.say(err) end
+        }
+    }
+--- request
+GET /t
+--- response_body_like
+too many loopcount. limit num:3
+--- no_error_log
+[error]
