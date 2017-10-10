@@ -536,3 +536,129 @@ GET /t
 
 --- no_error_log
 [error]
+
+
+
+=== TEST 21: 'include' tag with custom filesystem
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local var = {["aa"] =  "-----",  ["bb"] = { ["cc"] = "======" } }
+            local document = "{% if true  %} abc{{ aa }}defg {% endif %} {% include 'foo' for bb  %} {% include 'foo' %}"
+            local fs = { foo = [[{% if true  %} 12345{{ cc }}6789{% endif %}]] }
+            local function mock_template(location)
+                return fs[location]
+            end
+            local filesystem = FileSystem:new(mock_template)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say( interpreter:interpret( InterpreterContext:new(var), nil, nil, filesystem ) )
+        }
+    }
+--- request
+GET /t
+--- response_body
+ abc-----defg   12345======6789  123456789
+--- no_error_log
+[error]
+
+
+
+=== TEST 22 'include' tag missing template
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local document = "{% include 'missing_template' %}"
+            local filesystem = FileSystem:new(function() end)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            xpcall(function() interpreter:interpret(InterpreterContext:new({}), nil, nil, filesystem) end, ngx.say)
+        }
+    }
+--- request
+GET /t
+--- response_body_like chomp
+error when getting template "missing_template": cannot render empty template
+--- no_error_log
+[error]
+
+
+
+=== TEST 23 'include' tag error handling
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local document = "{% include 'error' %}"
+            local function mock_template(location)
+                error('failed to load location error')
+            end
+            local filesystem = FileSystem:new(mock_template)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            xpcall(function() interpreter:interpret(InterpreterContext:new({}), nil, nil, filesystem) end, ngx.say)
+        }
+    }
+--- request
+GET /t
+--- response_body_like chomp
+failed to load location error
+--- no_error_log
+[error]
+
+
+
+=== TEST 24 'include' tag custom error handling
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local FileSystem = Liquid.FileSystem
+            local InterpreterContext = Liquid.InterpreterContext
+            local document = "{% include 'error' %}"
+            local function mock_template(location)
+                error('failed to load location error')
+            end
+            local function error_handler(location, error)
+                return string.format("location: %q, error: %s", location, error)
+            end
+            local filesystem = FileSystem:new(mock_template, error_handler)
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret(InterpreterContext:new({}), nil, nil, filesystem))
+        }
+    }
+--- request
+GET /t
+--- response_body_like chomp
+failed to load location error
+--- no_error_log
+[error]
