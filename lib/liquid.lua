@@ -3039,6 +3039,7 @@ Liquid.Parser = Parser
 Liquid.Interpreter = Interpreter
 Liquid.InterpreterContext = InterpreterContext
 Liquid.FilterSet = FilterSet
+Liquid.ResourceLimit = ResourceLimit
 Liquid.FileSystem = FileSystem
 Liquid.ParserContext = ParserContext
 Liquid.Lazy = Lazy
