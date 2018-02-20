@@ -2018,9 +2018,11 @@ function Interpreter:visit_BinOp( node )
                     return false
                 end
             end
+
             if left_name == "Empty" then
                 local right_value = self:visit(node.right)
-                if right_value == nil or right_value == '' then
+                local str = self:obj2str(right_value)
+                if not str or str == '' then
                     if op == EQ then
                         return true
                     else
@@ -2028,7 +2030,7 @@ function Interpreter:visit_BinOp( node )
                     end
                 end
                 if type(right_value) == "table" then
-                    if next(right_value) then
+                    if next(right_value) or (str and str ~= '') then
                         if op == NE then
                             return true
                         else
@@ -2045,15 +2047,18 @@ function Interpreter:visit_BinOp( node )
                 self:raise_error("Invalid empty comparision", node, 'op')
             else
                 local left_value = self:visit(node.left)
-                if left_value == nil or left_value == '' then
+                local str = self:obj2str(left_value)
+
+                if not str or str == '' then
                     if op == EQ then
                         return true
                     else
                         return false
                     end
                 end
+
                 if type(left_value) == "table" then
-                    if next(left_value) then
+                    if next(left_value) or (str and str ~= '') then
                         if op == NE then
                             return true
                         else
@@ -2723,7 +2728,7 @@ do
         elseif obj_type == "Boolean" then
             return tostring(obj)
         elseif type(mt__tostring(obj)) == 'function' then
-            return tostring(obj)
+            return tostring(obj) or ''
         end
     end
 
