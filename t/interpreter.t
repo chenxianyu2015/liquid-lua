@@ -682,3 +682,25 @@ GET /t
 too many loopcount. limit num:3
 --- no_error_log
 [error]
+
+
+=== TEST 26: variable with __tostring metatable
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local document = [[str = {{ str }}, arr = {{ arr | join: '+' }}]]
+            local template = Liquid.Template:parse(document)
+
+            local str = setmetatable({}, { __tostring = function() return 'val' end })
+            local context = Liquid.InterpreterContext:new({ str = str, arr = { str, str } })
+            ngx.say(assert(template:render(context)))
+        }
+    }
+--- request
+GET /t
+--- response_body
+str = val, arr = val+val
+--- no_error_log
+[error]
