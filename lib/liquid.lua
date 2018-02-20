@@ -1970,14 +1970,14 @@ function Interpreter:visit_Compoud( node )
     local output = {}
     for k,v in ipairs(node) do
         if self.interrupt_flag then
-            return table.concat(output, '')
+            return self:safe_concat(output, '')
         end
         local result = self:visit(v)
         if result then
             table.insert(output, result)
         end
     end
-    return table.concat(output, '')
+    return self:safe_concat(output, '')
 end
 --
 function Interpreter:visit_Branch( node )
@@ -2234,7 +2234,7 @@ function Interpreter:visit_ForLoop( node )
         self.interrupt_type = nil
         self.interrupt_flag = false
     end
-    local result = table.concat(output, '')
+    local result = self:safe_concat(output, '')
     self.resourcelimit:check_length(#result)
     return result
 end
@@ -2336,7 +2336,7 @@ function Interpreter:visit_TableLoop( node )
         self.interrupt_type = nil
         self.interrupt_flag = false
     end
-    local result = table.concat(output, '\n')
+    local result = self:safe_concat(output, '\n')
     self.resourcelimit:check_length(#result)
     return result
 end
@@ -2704,19 +2704,38 @@ function string:rstrip( ... )
     local ws = [[(\s*\z)]]
     return ngx.re.sub(self, ws, '')
 end
-function Interpreter:obj2str( obj )
-    -- body
-    local obj_type = type(obj)
-    if obj_type == "nil" then
-        return ''
-    elseif obj_type == "number" then
-        return tostring(obj)
-    elseif obj_type == "string" then
-        return obj
-    elseif obj_type == "Boolean" then
-        return tostring(obj)
-    elseif obj_type == "table" then
-        return nil
+
+do
+    local empty_t = {}
+    local function mt__tostring(obj)
+        return (getmetatable(obj) or empty_t).__tostring
+    end
+
+    function Interpreter:obj2str( obj )
+        -- body
+        local obj_type = type(obj)
+        if obj_type == "nil" then
+            return ''
+        elseif obj_type == "number" then
+            return tostring(obj)
+        elseif obj_type == "string" then
+            return obj
+        elseif obj_type == "Boolean" then
+            return tostring(obj)
+        elseif type(mt__tostring(obj)) == 'function' then
+            return tostring(obj)
+        end
+    end
+
+    function Interpreter:safe_concat(t, d)
+        local tmp = {}
+
+        -- string keys are ignored by concat anyway
+        for i,v in ipairs(t) do
+            tmp[i] = Interpreter:obj2str(v)
+        end
+
+        return table.concat(tmp, d)
     end
 end
 ------------------------------------------------------------- helper methods end ---------------------------------------------------------
@@ -2756,7 +2775,7 @@ end
 --=== array filter begin
 local function join( a, b)
     -- body
-    return table.concat(a, b)
+    return Interpreter:safe_concat(a, b)
 end
 local function first( a )
     -- body
@@ -2787,7 +2806,7 @@ local function map( a, map_field)
     for i,v in ipairs(a) do
         table.insert(temp, v[map_field])
     end
-    return table.concat(temp, '')
+    return join(temp, '')
 end
 local function reverse( a )
     -- body
