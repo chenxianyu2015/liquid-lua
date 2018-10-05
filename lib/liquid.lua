@@ -2407,7 +2407,7 @@ function Interpreter:visit_Partial( node )
         end
     end
     local interpreter = Interpreter:new(parser)
-    local result = interpreter:interpret(context, self.filterset, self.resourcelimit)
+    local result = interpreter:interpret(context, self.filterset, self.resourcelimit, self.filesystem)
     context:destroyframe()
     self.resourcelimit:check_length(#result)
     return result
