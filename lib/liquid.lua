@@ -2777,33 +2777,52 @@ function FilterSet:find_filter( filter_name )
        return self.filterset[filter_name]
     end
 end
+
+local function is_iterator(o)
+    local mt = getmetatable(o)
+
+    return mt and mt.__ipairs
+end
+
+local function iterator(o)
+    if type(o) == 'table' or is_iterator(o) then
+        return o
+    else
+        return { o }
+    end
+end
+
 --=== array filter begin
 local function join( a, b)
     -- body
-    return Interpreter:safe_concat(a, b)
+    return Interpreter:safe_concat(iterator(a), b or ' ')
 end
 local function first( a )
     -- body
-    return a[1]
+    return iterator(a)[1]
+end
+local function size( a )
+    -- body
+    return(#iterator(a))
 end
 local function last( a )
     -- body
-    return a[#a]
+    return iterator(a)[size(a)]
 end
 local function concat( a, b)
     -- body
     local temp = {}
-    for i,v in ipairs(a) do
+    for i,v in ipairs(iterator(a)) do
         table.insert(temp, v)
     end
-    for i,v in ipairs(b) do
+    for i,v in ipairs(iterator(b)) do
         table.insert(temp, v)
     end
     return temp
 end
 local function index( a, b)
     -- body
-    return a[(b + 1)]
+    return iterator(a)[(b + 1)]
 end
 local function map( a, map_field)
     -- body
@@ -2816,20 +2835,18 @@ end
 local function reverse( a )
     -- body
     local temp = {}
-    local num = #a
+    local it = iterator(a)
+    local num = size(a)
     for k = num, 1, -1 do
-        table.insert(temp, a[k])
+        table.insert(temp, it[k])
     end
     return temp
 end
-local function size( a )
-    -- body
-    return(#a)
-end
+
 local function sort( a, sort_field)
     -- body
     local t = {}
-    for i,v in ipairs(a) do
+    for i,v in ipairs(iterator(a)) do
         table.insert(t, v)
     end
     if not sort_field then
@@ -2845,7 +2862,7 @@ local function uniq( a )
     -- body
     local t = {}
     local result = {}
-    for i,v in ipairs(a) do
+    for i,v in ipairs(iterator(a)) do
         local k = cjson.encode(v)
         if not t[k] then
             t[k] = true

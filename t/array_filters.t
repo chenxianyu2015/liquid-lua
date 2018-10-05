@@ -7,10 +7,11 @@ plan tests => repeat_each() * (3 * blocks());
 
 my $pwd = cwd();
 
-our $HttpConfig = qq{
+our $HttpConfig = qq|
     lua_package_path "$pwd/lib/?.lua;;;";
     lua_package_cpath "/usr/local/openresty/lualib/?.so;;";
-};
+    init_by_lua_block { Liquid = require 'liquid' }
+|;
 
 
 no_long_string();
@@ -264,3 +265,170 @@ GET /t
 --- no_error_log
 [error]
 
+
+
+=== TEST 11: 'join' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- str | join: ' - ' -}}
+            ]]):render(Liquid.InterpreterContext:new({ str = "string" })) )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+--- no_error_log
+[error]
+
+=== TEST 12: 'first' filter works strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- str | first -}}
+            ]]):render(Liquid.InterpreterContext:new({ str = "string" })) )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+--- no_error_log
+[error]
+
+
+
+=== TEST 13: 'last' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+                {{- str | last -}}
+            ]]):render( Liquid.InterpreterContext:new({ str = "string" })) )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+--- no_error_log
+[error]
+
+=== TEST 14: 'concat' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {%- assign a = "string" | concat:(1..3) -%}
+              {%- assign b = "string" | concat: "another" -%}
+              {%- for k in a %} {{k}} {%- endfor -%}
+              {%- for k in b %} {{k}} {%- endfor -%}
+            ]]):render())
+        }
+    }
+--- request
+GET /t
+--- response_body
+ string 1 2 3 string another
+--- no_error_log
+[error]
+
+=== TEST 5: 'index' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- "string"| index: 0 -}}
+            ]]):render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+--- no_error_log
+[error]
+
+
+=== TEST 16: 'reverse' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- "string" | reverse | join -}}
+            ]]):render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+--- no_error_log
+[error]
+
+
+
+=== TEST 17: 'size' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- "string" | size -}}
+            ]]):render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+1
+--- no_error_log
+[error]
+
+
+
+=== TEST 18: 'sort' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- "string" | sort | join -}}
+            ]]):render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+
+--- no_error_log
+[error]
+
+
+
+=== TEST 19: 'uniq' filter works on strings
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            ngx.say( Liquid.Template:parse([[
+              {{- "string" | uniq | join -}}
+            ]]):render() )
+        }
+    }
+--- request
+GET /t
+--- response_body
+string
+--- no_error_log
+[error]
