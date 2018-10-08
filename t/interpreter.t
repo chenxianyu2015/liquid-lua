@@ -341,23 +341,36 @@ GET /t
             local Interpreter = Liquid.Interpreter
             local FileSystem = Liquid.FileSystem
             local InterpreterContext = Liquid.InterpreterContext
-            local var = {["aa"] =  "-----",  ["bb"] = { ["cc"] = "======" } }
-            local document = "{% if true  %} abc{{ aa }}defg {% endif %} {% include 'foo' for bb  %} {% include 'foo' %} "
-            local function mock_template()
-                return [[{% if true  %} 12345{{ cc }}6789 {% endif %}]]
+            local var = {
+                ["aa"] =  "-----",
+                ["bb"] = { ["cc"] = "======" },
+            }
+            local document = [[
+                {%- if true  -%}
+                    abc{{ aa }}defg
+                {%- endif %}
+                {%- include 'foo' for bb -%}
+                {%- include 'foo' -%}
+                {%- include 'bar' -%}
+            ]]
+            local filesystem = {
+                foo = [[{% if true  %} 12345{{ cc }}6789 {% endif %}]],
+                bar = [[{% include 'recursive' %}]],
+                recursive = [[bar]],
+            }
+            local function mock_template(name)
+                return filesystem[name]
             end
-            FileSystem.get = mock_template
             local lexer = Lexer:new(document)
             local parser = Parser:new(lexer)
             local interpreter = Interpreter:new(parser)
-            ngx.say( interpreter:interpret( InterpreterContext:new(var) ) )
+            ngx.say( interpreter:interpret( InterpreterContext:new(var), nil, nil, FileSystem:new(mock_template) ) )
         }
     }
 --- request
 GET /t
 --- response_body
- abc-----defg   12345======6789   123456789  
-
+abc-----defg 12345======6789  123456789 bar
 --- no_error_log
 [error]
 
