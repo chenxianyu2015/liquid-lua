@@ -11,7 +11,7 @@ local Lazy = {}
 local ResourceLimit = {}
 local Nodetab = {}
 
-Liquid._VERSION = "0.0.1"
+Liquid._VERSION = "0.1.2"
 
 --Truthy and falsy
 local TRUE = "TRUE"    -- "true"
