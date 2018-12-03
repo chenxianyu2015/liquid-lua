@@ -760,3 +760,23 @@ GET /t
 true
 --- no_error_log
 [error]
+
+
+
+=== TEST 28: print false value
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            ngx.say( Liquid.Template:parse([[
+              {{- val -}}
+            ]]):render( Liquid.InterpreterContext:new({ val = false }) ))
+        }
+    }
+--- request
+GET /t
+--- response_body
+false
+--- no_error_log
+[error]

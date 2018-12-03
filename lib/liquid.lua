@@ -1973,7 +1973,7 @@ function Interpreter:visit_Compoud( node )
             return self:safe_concat(output, '')
         end
         local result = self:visit(v)
-        if result then
+        if result ~= nil then
             table.insert(output, result)
         end
     end
