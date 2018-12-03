@@ -2725,7 +2725,7 @@ do
             return tostring(obj)
         elseif obj_type == "string" then
             return obj
-        elseif obj_type == "Boolean" then
+        elseif obj_type == "boolean" then
             return tostring(obj)
         elseif type(mt__tostring(obj)) == 'function' then
             return tostring(obj) or ''
