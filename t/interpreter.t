@@ -740,3 +740,43 @@ str = , arr = +
 str is empty
 --- no_error_log
 [error]
+
+
+
+=== TEST 27: print true value
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            ngx.say( Liquid.Template:parse([[
+              {{- val -}}
+            ]]):render( Liquid.InterpreterContext:new({ val = true }) ))
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 28: print false value
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            ngx.say( Liquid.Template:parse([[
+              {{- val -}}
+            ]]):render( Liquid.InterpreterContext:new({ val = false }) ))
+        }
+    }
+--- request
+GET /t
+--- response_body
+false
+--- no_error_log
+[error]

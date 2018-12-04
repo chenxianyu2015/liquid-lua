@@ -1973,7 +1973,7 @@ function Interpreter:visit_Compoud( node )
             return self:safe_concat(output, '')
         end
         local result = self:visit(v)
-        if result then
+        if result ~= nil then
             table.insert(output, result)
         end
     end
@@ -2725,7 +2725,7 @@ do
             return tostring(obj)
         elseif obj_type == "string" then
             return obj
-        elseif obj_type == "Boolean" then
+        elseif obj_type == "boolean" then
             return tostring(obj)
         elseif type(mt__tostring(obj)) == 'function' then
             return tostring(obj) or ''
