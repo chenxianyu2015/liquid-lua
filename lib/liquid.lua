@@ -2517,6 +2517,12 @@ function InterpreterContext:find_var( name )
     if name == nil then
         error("Invalid var name")
     end
+
+    -- Just returns the full context if the value if self.
+    if name == "self" then
+        return self.stackframe
+    end
+
     local value = nil
     local length = #(self.stackframe)
     local step = -1
@@ -3032,7 +3038,15 @@ local function json( obj )
     -- body
     return cjson.encode(obj)
 end
+
+
+local function get(obj, key)
+    return obj[key]
+end
+
 --=== Additional filter end
+
+
 
 --========================================================== add filers to FilterSet instance================================
 --Array filter 
@@ -3079,7 +3093,7 @@ FilterSet:add_filter("str_reverse", str_reverse )
 
 --Additinal filter
 FilterSet:add_filter("json", json )
-
+FilterSet:add_filter("get", get)
 
 
 
