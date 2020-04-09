@@ -472,3 +472,96 @@ GET /t
 cba
 --- no_error_log
 [error]
+
+=== TEST 20: 'remove_first' with special chars.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local document = "{% assign a = \"/foo/a-b-c/bar\" | remove_first: \"a-b-c/\"  %}{{a}}"
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret())
+        }
+    }
+--- request
+GET /t
+--- response_body
+/foo/bar
+--- no_error_log
+[error]
+
+=== TEST 21: 'remove' with special chars.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local document = "{% assign a = \"/foo/a-b-c/bar/a-b-c/\" | remove: \"a-b-c/\"  %}{{a}}"
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret())
+        }
+    }
+--- request
+GET /t
+--- response_body
+/foo/bar/
+--- no_error_log
+[error]
+
+
+=== TEST 22: 'replace' with special chars.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local document = "{% assign a = \"/foo/a-b/bar/a-b/\"  %}{{a | replace: \"a-b/\", \"foo/\"}}"
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret())
+        }
+    }
+--- request
+GET /t
+--- response_body
+/foo/foo/bar/foo/
+--- no_error_log
+[error]
+
+=== TEST 23: 'replace_first' with special chars.
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local Liquid = require 'liquid'
+            local Lexer = Liquid.Lexer
+            local Parser = Liquid.Parser
+            local Interpreter = Liquid.Interpreter
+            local document = "{% assign a = \"/foo/a-b/bar/\"  %}{{a | replace_first: \"a-b/\", \"foo/\"}}"
+            local lexer = Lexer:new(document)
+            local parser = Parser:new(lexer)
+            local interpreter = Interpreter:new(parser)
+            ngx.say(interpreter:interpret())
+        }
+    }
+--- request
+GET /t
+--- response_body
+/foo/foo/bar/
+--- no_error_log
+[error]

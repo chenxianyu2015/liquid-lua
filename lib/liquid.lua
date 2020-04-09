@@ -11,6 +11,10 @@ local Lazy = {}
 local ResourceLimit = {}
 local Nodetab = {}
 
+local stringbyte = string.byte
+local stringchar = string.char
+local table_unpack = table.unpack
+
 Liquid._VERSION = "0.1.2"
 
 --Truthy and falsy
@@ -98,6 +102,41 @@ local ENDRAW = "ENDRAW"
 --EOF
 local EOF = 'EOF'
 --
+--
+
+--- When replace_first filter was used, all the given chars should scaped at
+--lua way, no regexp option. To avoid future issues with different liquid
+--engines from other languages, this function sanitize the string to replace in
+--the correct way
+--Function is using bytes instead of chars, because comparision is faster in
+--this way. All was tested that is jit compatible to make it faster, no NYI
+--found
+--More information:
+--https://issues.redhat.com/browse/THREESCALE-4937
+--https://www.lua.org/pil/20.2.html
+function sanitize_replace(str)
+  local tbl = {stringbyte(str, 1, #str)}
+  result = {}
+  for _, v in pairs(tbl) do
+    if v == 40 or -- byte for char (
+      v == 41 or -- byte for char )
+      v == 46 or -- byte for char .
+      v == 37 or -- byte for char %
+      v == 43 or -- byte for char +
+      v == 45 or -- byte for char -
+      v == 42 or -- byte for char *
+      v == 63 or -- byte for char ?
+      v == 91 or -- byte for char [
+      v == 94 or -- byte for char ^
+      v == 36  -- byte for char $
+    then
+      result[#result+1] = 37
+    end
+    result[#result+1] = v
+  end
+  return stringchar(table_unpack(result))
+end
+
 -- Token
 local Token = {}
 --
@@ -2944,19 +2983,19 @@ local function prepend( str, str_prepend )
 end
 local function remove( str , pattern)
     -- body
-    return string.gsub(str, pattern, '')
+    return string.gsub(str, sanitize_replace(pattern), '')
 end
 local function remove_first( str, pattern)
     -- body
-    return string.gsub(str, pattern,'', 1)
+    return string.gsub(str, sanitize_replace(pattern),'', 1)
 end
 local function replace( str, pattern, str_replace )
     -- body
-    return string.gsub(str, pattern, str_replace)
+    return string.gsub(str, sanitize_replace(pattern), str_replace)
 end
 local function replace_first( str, pattern, str_replace  )
     -- body
-    return string.gsub(str, pattern, str_replace, 1)
+    return string.gsub(str, sanitize_replace(pattern), str_replace, 1)
 end
 local function slice( str, from, to )
     -- body
