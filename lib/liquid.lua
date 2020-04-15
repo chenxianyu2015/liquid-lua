@@ -114,23 +114,27 @@ local EOF = 'EOF'
 --More information:
 --https://issues.redhat.com/browse/THREESCALE-4937
 --https://www.lua.org/pil/20.2.html
+--
+local special_chars = {
+  [40] = true, -- byte for char (
+  [41] = true, -- byte for char )
+  [46] = true, -- byte for char .
+  [37] = true, -- byte for char %
+  [43] = true, -- byte for char +
+  [45] = true, -- byte for char -
+  [42] = true, -- byte for char *
+  [63] = true, -- byte for char ?
+  [91] = true, -- byte for char [
+  [94] = true, -- byte for char ^
+  [36] = true, -- byte for char $
+}
+
 function sanitize_replace(str)
   local tbl = {stringbyte(str, 1, #str)}
   result = {}
   for _, v in pairs(tbl) do
-    if v == 40 or -- byte for char (
-      v == 41 or -- byte for char )
-      v == 46 or -- byte for char .
-      v == 37 or -- byte for char %
-      v == 43 or -- byte for char +
-      v == 45 or -- byte for char -
-      v == 42 or -- byte for char *
-      v == 63 or -- byte for char ?
-      v == 91 or -- byte for char [
-      v == 94 or -- byte for char ^
-      v == 36  -- byte for char $
-    then
-      result[#result+1] = 37
+    if special_chars[v] then
+      result[#result+1] = 37 -- append before a %
     end
     result[#result+1] = v
   end
