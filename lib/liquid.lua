@@ -131,7 +131,7 @@ local special_chars = {
 
 function sanitize_replace(str)
   local tbl = {stringbyte(str, 1, #str)}
-  result = {}
+  local result = {}
   for _, v in pairs(tbl) do
     if special_chars[v] then
       result[#result+1] = 37 -- append before a %
