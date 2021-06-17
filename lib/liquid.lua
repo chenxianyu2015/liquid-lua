@@ -129,7 +129,7 @@ local special_chars = {
   [36] = true, -- byte for char $
 }
 
-function sanitize_replace(str)
+local function sanitize_replace(str)
   local tbl = {stringbyte(str, 1, #str)}
   local result = {}
   for _, v in pairs(tbl) do
