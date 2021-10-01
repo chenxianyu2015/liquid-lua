@@ -3025,7 +3025,7 @@ local function split( str, pattern )
             end
         end
     until from == nil
-    if index < #str then
+    if index <= #str then
         table.insert(result, string.sub(str, index))
     end
     return result
