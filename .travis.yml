@@ -17,6 +17,7 @@ install:
   - docker run --name testContainer -d -v $(pwd):/opt/code openresty/openresty:bionic sleep 1h
   - docker exec -ti testContainer apt-get install -qq -y cpanminus axel
   - docker exec -ti testContainer cpanm --notest Test::Nginx
+  - docker exec -ti testContainer luarocks install date 2.2-2
 
 script:
   - docker exec -ti testContainer bash -c "cd /opt/code; prove -r t"

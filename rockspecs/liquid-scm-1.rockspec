@@ -10,7 +10,9 @@ description = {
    homepage = "https://github.com/chenxianyu2015/liquid-lua",
    license = "BSD-2-Clause"
 }
-dependencies = {}
+dependencies = {
+   "date >= 2.2-2"
+}
 build = {
    type = "builtin",
    modules = {

@@ -1,4 +1,5 @@
 local cjson = require 'cjson'
+local Datelib = require 'date'
 local Liquid = {}
 local Lexer = {}
 local Parser = {}
@@ -3076,6 +3077,34 @@ local function str_reverse( str )
     return string.reverse(str)
 end
 --=== String filter end
+--=== Date filter
+local function date_parse(obj)
+    local dateobj = Datelib(obj)
+    return dateobj
+end
+
+local function date_now()
+    local dateobj = Datelib(true)
+    return dateobj
+end
+
+local date_func =
+{
+    ["now"] = date_now,
+    ["default"] = date_parse,
+}
+
+local function date(obj, format)
+    local date_obj = nil;
+    local func = date_func[obj]
+    if func then 
+        date_obj = func(obj)
+    else
+        date_obj = date_func["default"](obj)
+    end
+    return date_obj:fmt(format)
+end
+--=== Date filter end
 --=== Additional filter begin
 local function json( obj )
     -- body
@@ -3133,6 +3162,9 @@ FilterSet:add_filter("upcase", upcase )
 FilterSet:add_filter("url_encode", url_encode )
 FilterSet:add_filter("url_decode", url_decode )
 FilterSet:add_filter("str_reverse", str_reverse )
+
+--Date filter
+FilterSet:add_filter("date", date )
 
 --Additinal filter
 FilterSet:add_filter("json", json )
