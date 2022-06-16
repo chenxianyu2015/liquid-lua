@@ -2078,13 +2078,11 @@ function Interpreter:visit_BinOp( node )
         local right_value = self:visit(node.right)
         if type(right_value) == "string" then
             if type(left_value) == "string" then
-                return string.find(left_value, left_value)
+                return string.find(left_value, right_value)
             elseif type(left_value) == "table" then
-                for i, v in left_value do
-                     if type(v) == "string" then
-                         if string.find(v, right_value) then
-                             return true
-                         end
+                for i, v in ipairs(left_value) do
+                     if type(v) == "string" and v == right_value then
+                        return true
                      end
                 end
                 return false
